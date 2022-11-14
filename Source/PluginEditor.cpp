@@ -9,20 +9,78 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#define potSize 80
+#define textHeight 20
 //==============================================================================
-Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyShevAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyShevAudioProcessor& p, juce::AudioProcessorValueTreeState& vts)
+: AudioProcessorEditor (&p), audioProcessor (p), valueTreeState (vts)
 {
-    addAndMakeVisible( polyAmounts );
+    setLookAndFeel( &otherLookandFeel );
+    addAndMakeVisible( chebyMultiSlider );
     
-    polyAmounts.setNumSliders( 5 );
+    const int nSliders = audioProcessor.getNumChebyOrders();
+    chebyMultiSlider.setNumSliders( nSliders );
+//    std::vector< std::unique_ptr< juce::AudioProcessorValueTreeState::SliderAttachment > > chebySliderAttachment ( nSliders );
+    chebySliderAttachment.resize( nSliders );
+    auto chebySliders = chebyMultiSlider.getSliderArray();
+    for ( int i = 0; i < nSliders; i++ )
+    {
+//        chebyMultiSlider.setSliderValue( i, audioProcessor.getLevel( i ) );
+        
+        std::string name = "cheby" + std::to_string( i + 2 ) ;
+        chebySliderAttachment[ i ].reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, name, *chebySliders[ i ] ) );
+    }
+    
+    mixSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "mix", mixSlider));
+    addAndMakeVisible( &mixSlider );
+    mixSlider.setSliderStyle (juce::Slider::Rotary);
+    mixSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, potSize, textHeight);
+    mixSlider.setNumDecimalPlacesToDisplay(3);
+    mixSlider.setTextValueSuffix ("%");
+    
+    inputDriveSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "inputDrive", inputDriveSlider));
+    addAndMakeVisible( &inputDriveSlider );
+    inputDriveSlider.setSliderStyle (juce::Slider::Rotary);
+    inputDriveSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, potSize, textHeight);
+    inputDriveSlider.setNumDecimalPlacesToDisplay(3);
+    inputDriveSlider.setTextValueSuffix ("%");
+    
+    
+    inputLPFSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "inLPF", inputLPFSlider));
+    addAndMakeVisible( &inputLPFSlider );
+    inputLPFSlider.setRange( 20.0f, 20000.0f );
+    inputLPFSlider.setSliderStyle (juce::Slider::Rotary);
+    inputLPFSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, potSize, textHeight);
+    inputLPFSlider.setNumDecimalPlacesToDisplay(3);
+    inputLPFSlider.setTextValueSuffix ("Hz");
+    inputLPFSlider.setSkewFactorFromMidPoint( 1000.0f );
+    
+    outputHPFSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "outHPF", outputHPFSlider));
+    addAndMakeVisible( &outputHPFSlider );
+    outputHPFSlider.setRange( 20.0f, 20000.0f );
+    outputHPFSlider.setSliderStyle (juce::Slider::Rotary);
+    outputHPFSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, potSize, textHeight);
+    outputHPFSlider.setNumDecimalPlacesToDisplay(3);
+    outputHPFSlider.setTextValueSuffix ("Hz");
+    outputHPFSlider.setSkewFactorFromMidPoint( 1000.0f );
+    
+    outputLPFSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "outLPF", outputLPFSlider));
+    addAndMakeVisible( &outputLPFSlider );
+    outputLPFSlider.setRange( 20.0f, 20000.0f );
+    outputLPFSlider.setSliderStyle (juce::Slider::Rotary);
+    outputLPFSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, potSize, textHeight);
+    outputLPFSlider.setNumDecimalPlacesToDisplay(3);
+    outputLPFSlider.setTextValueSuffix ("Hz");
+    outputLPFSlider.setSkewFactorFromMidPoint( 1000.0f );
+    
     
     startTimer(100);
-    setSize (400, 300);
+    setSize (600, 300);
 }
 
 Sjf_chebyShevAudioProcessorEditor::~Sjf_chebyShevAudioProcessorEditor()
 {
+    setLookAndFeel( nullptr  );
 }
 
 //==============================================================================
@@ -38,16 +96,17 @@ void Sjf_chebyShevAudioProcessorEditor::paint (juce::Graphics& g)
 
 void Sjf_chebyShevAudioProcessorEditor::resized()
 {
-    polyAmounts.setBounds( 10, 10, getWidth() - 20, getHeight() - 20 );
+    chebyMultiSlider.setBounds( 10, 10, getWidth() * 0.5, getHeight() - 20 );
+    inputDriveSlider.setBounds( chebyMultiSlider.getRight(), chebyMultiSlider.getY(), potSize, potSize );
+    inputLPFSlider.setBounds(inputDriveSlider.getX(), inputDriveSlider.getBottom(), potSize, potSize );
+    
+    outputHPFSlider.setBounds( inputDriveSlider.getRight(), inputDriveSlider.getY(), potSize, potSize );
+    outputLPFSlider.setBounds( outputHPFSlider.getX(), outputHPFSlider.getBottom(), potSize, potSize );
+    mixSlider.setBounds( outputLPFSlider.getX(), outputLPFSlider.getBottom(), potSize, potSize );
 }
 
 
 void Sjf_chebyShevAudioProcessorEditor::timerCallback()
 {
-    for (int i = 0; i < 5; i++ )
-    {
-        DBG( polyAmounts.fetch( i ) );
-        audioProcessor.setLevels( i, polyAmounts.fetch( i ) );
-    }
-//
+
 }
