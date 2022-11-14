@@ -15,7 +15,7 @@
 //==============================================================================
 /**
 */
-class Sjf_chebyShevAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Timer
+class Sjf_chebyShevAudioProcessorEditor  : public juce::AudioProcessorEditor /*, public juce::Timer */
 {
 public:
     Sjf_chebyShevAudioProcessorEditor (Sjf_chebyShevAudioProcessor&, juce::AudioProcessorValueTreeState& vts);
@@ -34,12 +34,18 @@ private:
     
     
     sjf_multislider chebyMultiSlider;
-    
-    void timerCallback() override;
+//
+//    void timerCallback() override;
     
     juce::Slider mixSlider, inputDriveSlider, inputLPFSlider, outputHPFSlider, outputLPFSlider;
+    juce::Label mixLabel, inputDriveLabel, inputLPFLabel, outputLPFLabel, outputHPFLabel;
+    
     
     std::unique_ptr< juce::AudioProcessorValueTreeState::SliderAttachment > mixSliderAttachment, inputDriveSliderAttachment, inputLPFSliderAttachment, outputHPFSliderAttachment, outputLPFSliderAttachment;
     std::vector< std::unique_ptr< juce::AudioProcessorValueTreeState::SliderAttachment > > chebySliderAttachment;
+    
+    
+    juce::SharedResourcePointer<juce::TooltipWindow> tooltipWindow;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Sjf_chebyShevAudioProcessorEditor)
 };
