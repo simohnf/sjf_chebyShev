@@ -98,6 +98,22 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     outputLPFLabel.setText( "Out LPF", juce::dontSendNotification );
     outputLPFLabel.setJustificationType( juce::Justification::centred );
     
+    
+    addAndMakeVisible(&tooltipsToggle);
+    tooltipsToggle.setButtonText("Hints");
+    tooltipsToggle.onStateChange = [this]
+    {
+        if (tooltipsToggle.getToggleState())
+        {
+            tooltipWindow.getObject().setAlpha(1.0f);
+        }
+        else
+        {
+            tooltipWindow.getObject().setAlpha(0.0f);
+        }
+    };
+    tooltipWindow.getObject().setAlpha(0.0f);
+    
 //    startTimer(100);
     setSize (600, 300);
 }
@@ -145,6 +161,8 @@ void Sjf_chebyShevAudioProcessorEditor::resized()
     outputLPFSlider.setBounds( outputHPFSlider.getX(), outputHPFSlider.getBottom() + textHeight + textHeight*0.5f, potSize, potSize );
     
     mixSlider.setBounds( outputLPFSlider.getRight() + textHeight*0.5f, outputHPFSlider.getY(), potSize, potSize );
+    
+    tooltipsToggle.setBounds(getWidth() - potSize, getHeight() - textHeight, potSize, textHeight );
 }
 
 //

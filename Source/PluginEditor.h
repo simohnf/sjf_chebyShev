@@ -39,7 +39,7 @@ private:
     
     juce::Slider mixSlider, inputDriveSlider, inputLPFSlider, outputHPFSlider, outputLPFSlider;
     juce::Label mixLabel, inputDriveLabel, inputLPFLabel, outputLPFLabel, outputHPFLabel;
-    
+    juce::ToggleButton tooltipsToggle;
     
     std::unique_ptr< juce::AudioProcessorValueTreeState::SliderAttachment > mixSliderAttachment, inputDriveSliderAttachment, inputLPFSliderAttachment, outputHPFSliderAttachment, outputLPFSliderAttachment;
     std::vector< std::unique_ptr< juce::AudioProcessorValueTreeState::SliderAttachment > > chebySliderAttachment;
