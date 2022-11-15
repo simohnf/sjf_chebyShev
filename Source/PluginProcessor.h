@@ -79,22 +79,27 @@ public:
         return m_cheby.getNumOrders();
     }
     
+    bool lpfIsFirstOrder()
+    {
+        return m_firstOrderLowPass;
+    }
+    
     void setSmoothedValueTargets();
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void initialiseFilters();
     void initialiseSmoothedValues();
     float calculateFilterAlpha( float cutOffFrequency );
-    void setLPFilterOrder();
+    void setLPFilterOrder( bool filtersAreFirstOrder );
     //==============================================================================
     sjf_chebyshev m_cheby;
     std::array< std::array< sjf_lpf, 2 >, 2 > m_outHPF;
     std::array< sjf_lpf, 2 > m_inLPF, m_outLPF;
     std::vector< float > m_levels;
-    std::vector< juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> > m_smoothedChebyLevels;
+    std::vector< juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> > m_smoothedChebyLevels; 
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> m_mixSmoothed, m_inputDriveSmoothed, m_inLPFSmoothed, m_outHPFSmoothed, m_outLPFSmoothed;
     float m_SR = 44100;
-    bool m_firstOrderLowPass = true;
+    bool m_firstOrderLowPass;
     
     juce::AudioProcessorValueTreeState parameters;
     

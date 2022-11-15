@@ -66,12 +66,12 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     
     inputLPFSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "inLPF", inputLPFSlider));
     addAndMakeVisible( &inputLPFSlider );
-    inputLPFSlider.setRange( 20.0f, 20000.0f );
+    inputLPFSlider.setRange( 20.0f, 10000.0f );
     inputLPFSlider.setSliderStyle (juce::Slider::Rotary);
     inputLPFSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, potSize, textHeight);
     inputLPFSlider.setNumDecimalPlacesToDisplay(3);
     inputLPFSlider.setTextValueSuffix ("Hz");
-    inputLPFSlider.setSkewFactorFromMidPoint( 1000.0f );
+    inputLPFSlider.setSkewFactorFromMidPoint( 500.0f );
     inputLPFSlider.setTooltip( "Cutoff frequency for lowpass filter on input to chebyshev waveshapers" );
     inputLPFLabel.attachToComponent( &inputLPFSlider, false );
     inputLPFLabel.setText( "LPF", juce::dontSendNotification );
@@ -83,12 +83,12 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     
     outputHPFSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "outHPF", outputHPFSlider));
     addAndMakeVisible( &outputHPFSlider );
-    outputHPFSlider.setRange( 20.0f, 20000.0f );
+    outputHPFSlider.setRange( 20.0f, 10000.0f );
     outputHPFSlider.setSliderStyle (juce::Slider::Rotary);
     outputHPFSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, potSize, textHeight);
     outputHPFSlider.setNumDecimalPlacesToDisplay(3);
     outputHPFSlider.setTextValueSuffix ("Hz");
-    outputHPFSlider.setSkewFactorFromMidPoint( 1000.0f );
+    outputHPFSlider.setSkewFactorFromMidPoint( 500.0f );
     outputHPFSlider.setTooltip( "Cutoff frequency for highpass filter on output of chebyshev waveshapers" );
     outputHPFLabel.attachToComponent( &outputHPFSlider, false );
     outputHPFLabel.setText( "HPF", juce::dontSendNotification );
@@ -96,12 +96,12 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     
     outputLPFSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "outLPF", outputLPFSlider));
     addAndMakeVisible( &outputLPFSlider ); 
-    outputLPFSlider.setRange( 20.0f, 20000.0f );
+    outputLPFSlider.setRange( 20.0f, 10000.0f );
     outputLPFSlider.setSliderStyle (juce::Slider::Rotary);
     outputLPFSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, potSize, textHeight);
     outputLPFSlider.setNumDecimalPlacesToDisplay(3);
     outputLPFSlider.setTextValueSuffix ("Hz");
-    outputLPFSlider.setSkewFactorFromMidPoint( 1000.0f );
+    outputLPFSlider.setSkewFactorFromMidPoint( 500.0f );
     outputLPFSlider.setTooltip( "Cutoff frequency for lowpass filter on output of chebyshev waveshapers" );
     outputLPFLabel.attachToComponent( &outputLPFSlider, false);
     outputLPFLabel.setText( "LPF", juce::dontSendNotification );
@@ -111,7 +111,7 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     addAndMakeVisible( &firstOrderLPFToggle );
     firstOrderLPFToggleAttachment.reset( new juce::AudioProcessorValueTreeState::ButtonAttachment(valueTreeState, "firstOrderLPF", firstOrderLPFToggle));
     firstOrderLPFToggle.setTooltip("Order for low pass filters");
-    firstOrderLPFToggle.onStateChange = [ this ]
+    firstOrderLPFToggle.onClick = [ this ]
     {
         if ( firstOrderLPFToggle.getToggleState() )
         {
@@ -122,6 +122,16 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
             firstOrderLPFToggle.setButtonText("2nd order");
         }
     };
+    if ( audioProcessor.lpfIsFirstOrder() )
+    {
+//        firstOrderLPFToggle.setToggleState( true, juce::dontSendNotification );
+        firstOrderLPFToggle.setButtonText("1st order");
+    }
+    else
+    {
+        firstOrderLPFToggle.setButtonText("2nd order");
+    }
+    
     
     addAndMakeVisible(&tooltipsToggle);
     tooltipsToggle.setButtonText("Hints");
@@ -139,7 +149,6 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     };
     tooltipWindow.getObject().setAlpha(0.0f);
     
-//    startTimer(100);
     auto w = potSize * 6 + textHeight * 2.5;
     auto h = potSize * 2 + textHeight * 5.5 - 2;
     setSize (w, h);
@@ -177,12 +186,13 @@ void Sjf_chebyShevAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillRect( mixLabel.getX(), mixLabel.getY(), mixLabel.getWidth(), mixSlider.getBottom() - mixLabel.getY() );
     g.setColour( outlineColour );
     g.drawRect( mixLabel.getX(), mixLabel.getY(), mixLabel.getWidth(), mixSlider.getBottom() - mixLabel.getY() );
+    
 }
 
 void Sjf_chebyShevAudioProcessorEditor::resized()
 {
     chebyMultiSlider.setBounds( textHeight * 0.5f, textHeight + textHeight*0.5f, potSize * 3, getHeight() - textHeight*2.0f );
-    
+
     inputLabel.setBounds( chebyMultiSlider.getRight() + textHeight*0.5f, chebyMultiSlider.getY(), potSize, textHeight );
     inputDriveSlider.setBounds( inputLabel.getX(), inputLabel.getBottom() + inputDriveLabel.getHeight(), potSize, potSize );
     inputLPFSlider.setBounds(inputDriveSlider.getX(), inputDriveSlider.getBottom() + inputDriveLabel.getHeight(), potSize, potSize );
@@ -194,13 +204,8 @@ void Sjf_chebyShevAudioProcessorEditor::resized()
     auto mixTop = outputLabel.getY() + ( outputLPFSlider.getBottom() - outputLabel.getY() )*0.5f - ( mixLabel.getHeight() + potSize ) * 0.5f;
     
     mixSlider.setBounds( outputLabel.getRight() + textHeight*0.5f, mixTop, potSize, potSize );
-    firstOrderLPFToggle.setBounds( mixSlider.getX(), mixSlider.getBottom(), potSize, textHeight );
+    firstOrderLPFToggle.setBounds( mixSlider.getX(), mixSlider.getBottom() + textHeight*0.5f, potSize, textHeight );
     
     tooltipsToggle.setBounds(mixSlider.getX(), chebyMultiSlider.getBottom() - textHeight, potSize, textHeight );
 }
 
-//
-//void Sjf_chebyShevAudioProcessorEditor::timerCallback()
-//{
-//
-//}

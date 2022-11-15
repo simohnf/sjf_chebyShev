@@ -42,6 +42,7 @@ Sjf_chebyShevAudioProcessor::Sjf_chebyShevAudioProcessor()
     outLPFParameter = parameters.getRawParameterValue( "outLPF" );
     firstOrderLPParameter = parameters.getRawParameterValue( "firstOrderLPF" );
     
+    setLPFilterOrder( *firstOrderLPParameter );
 }
 
 Sjf_chebyShevAudioProcessor::~Sjf_chebyShevAudioProcessor()
@@ -126,6 +127,7 @@ void Sjf_chebyShevAudioProcessor::prepareToPlay (double sampleRate, int samplesP
     }
     initialiseSmoothedValues();
     setSmoothedValueTargets();
+    setLPFilterOrder( *firstOrderLPParameter );
 }
 
 void Sjf_chebyShevAudioProcessor::releaseResources()
@@ -173,12 +175,15 @@ void Sjf_chebyShevAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     float distorted, val, inVal, dryAmp, wetAmp, inLPFAlpha, outHPFAlpha, outLPFAlpha, inDrive;
 
     auto numOrders = m_cheby.getNumOrders();
-    for ( int i  = 0; i < m_inLPF.size() ; i++ )
-    {
-        m_inLPF[ i ].isFirstOrder( *firstOrderLPParameter );
-        m_outLPF[ i ].isFirstOrder( *firstOrderLPParameter );
-    }
-    
+    setLPFilterOrder( *firstOrderLPParameter );
+//    if ( m_inLPF[ 0 ].getIsFirstOrder() )
+//    {
+//        DBG("First Order");
+//    }
+//    else
+//    {
+//        DBG("Second Order");
+//    }
     for ( int i = 0; i < bufferSize; i++ )
     {
         inDrive = m_inputDriveSmoothed.getNextValue();
@@ -293,7 +298,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout Sjf_chebyShevAudioProcessor:
     params.add ( std::make_unique<juce::AudioParameterFloat> ("inLPF", "InLPF", 20.0f, 10000.0f, 1000.0f) );
     params.add ( std::make_unique<juce::AudioParameterFloat> ("outHPF", "OutHPF", 20.0f, 10000.0f, 20.0f) );
     params.add ( std::make_unique<juce::AudioParameterFloat> ("outLPF", "OutLPF", 20.0f, 10000.0f, 1000.0f) );
-    params.add ( std::make_unique<juce::AudioParameterBool> ("firstOrderLPF", "FirstOrderLPF", false ) );
+    params.add ( std::make_unique<juce::AudioParameterBool> ("firstOrderLPF", "FirstOrderLPF", true ) );
     for ( int i = 0; i < m_cheby.getNumOrders(); i++ )
     {
         std::string name = "cheby" + std::to_string( i + 2 ) ;
@@ -309,7 +314,16 @@ float Sjf_chebyShevAudioProcessor::calculateFilterAlpha( float cutOffFrequency )
     return sin( cutOffFrequency * 2 * 3.14159265359 / m_SR );
 }
 
-
+void Sjf_chebyShevAudioProcessor::setLPFilterOrder( bool filtersAreFirstOrder )
+{
+    m_firstOrderLowPass = filtersAreFirstOrder;
+    for ( int i  = 0; i < m_inLPF.size() ; i++ )
+    {
+        m_inLPF[ i ].isFirstOrder( m_firstOrderLowPass );
+        m_outLPF[ i ].isFirstOrder( m_firstOrderLowPass );
+    }
+    
+}
 
 //==============================================================================
 // This creates new instances of the plugin..
