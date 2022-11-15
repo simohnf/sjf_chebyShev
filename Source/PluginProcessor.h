@@ -85,15 +85,16 @@ private:
     void initialiseFilters();
     void initialiseSmoothedValues();
     float calculateFilterAlpha( float cutOffFrequency );
+    void setLPFilterOrder();
     //==============================================================================
     sjf_chebyshev m_cheby;
     std::array< std::array< sjf_lpf, 2 >, 2 > m_outHPF;
-    std::array< sjf_lpfFirst, 2 > m_inLPF, m_outLPF;
+    std::array< sjf_lpf, 2 > m_inLPF, m_outLPF;
     std::vector< float > m_levels;
     std::vector< juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> > m_smoothedChebyLevels;
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> m_mixSmoothed, m_inputDriveSmoothed, m_inLPFSmoothed, m_outHPFSmoothed, m_outLPFSmoothed;
     float m_SR = 44100;
-    
+    bool m_firstOrderLowPass = true;
     
     juce::AudioProcessorValueTreeState parameters;
     
@@ -102,6 +103,7 @@ private:
     std::atomic<float>* inLPFParameter = nullptr;
     std::atomic<float>* outHPFParameter = nullptr;
     std::atomic<float>* outLPFParameter = nullptr;
+    std::atomic<float>* firstOrderLPParameter = nullptr;
     std::vector< std::atomic<float>* > chebyParameters;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Sjf_chebyShevAudioProcessor)

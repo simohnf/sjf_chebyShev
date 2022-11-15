@@ -38,12 +38,12 @@ private:
 //    void timerCallback() override;
     
     juce::Slider mixSlider, inputDriveSlider, inputLPFSlider, outputHPFSlider, outputLPFSlider;
-    juce::Label mixLabel, inputDriveLabel, inputLPFLabel, outputLPFLabel, outputHPFLabel;
-    juce::ToggleButton tooltipsToggle;
+    juce::Label inputLabel, outputLabel, mixLabel, inputDriveLabel, inputLPFLabel, outputLPFLabel, outputHPFLabel;
+    juce::ToggleButton tooltipsToggle, firstOrderLPFToggle;
     
     std::unique_ptr< juce::AudioProcessorValueTreeState::SliderAttachment > mixSliderAttachment, inputDriveSliderAttachment, inputLPFSliderAttachment, outputHPFSliderAttachment, outputLPFSliderAttachment;
     std::vector< std::unique_ptr< juce::AudioProcessorValueTreeState::SliderAttachment > > chebySliderAttachment;
-    
+    std::unique_ptr< juce::AudioProcessorValueTreeState::ButtonAttachment > firstOrderLPFToggleAttachment; 
     
     juce::SharedResourcePointer<juce::TooltipWindow> tooltipWindow;
     

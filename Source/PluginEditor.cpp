@@ -48,6 +48,11 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     mixLabel.setText("Mix", juce::dontSendNotification);
     mixLabel.setJustificationType( juce::Justification::centred );
     
+    addAndMakeVisible( &inputLabel );
+    inputLabel.setText( "INPUT", juce::dontSendNotification );
+    inputLabel.setJustificationType( juce::Justification::centred );
+    
+    
     inputDriveSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "inputDrive", inputDriveSlider));
     addAndMakeVisible( &inputDriveSlider );
     inputDriveSlider.setSliderStyle (juce::Slider::Rotary);
@@ -56,7 +61,7 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     inputDriveSlider.setTextValueSuffix ("%");
     inputDriveSlider.setTooltip( "Level of input to the chebyshev waveshapers" );
     inputDriveLabel.attachToComponent( &inputDriveSlider, false );
-    inputDriveLabel.setText( "In Drive", juce::dontSendNotification);
+    inputDriveLabel.setText( "Drive", juce::dontSendNotification);
     inputDriveLabel.setJustificationType( juce::Justification::centred );
     
     inputLPFSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "inLPF", inputLPFSlider));
@@ -69,8 +74,12 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     inputLPFSlider.setSkewFactorFromMidPoint( 1000.0f );
     inputLPFSlider.setTooltip( "Cutoff frequency for lowpass filter on input to chebyshev waveshapers" );
     inputLPFLabel.attachToComponent( &inputLPFSlider, false );
-    inputLPFLabel.setText( "In LPF", juce::dontSendNotification );
+    inputLPFLabel.setText( "LPF", juce::dontSendNotification );
     inputLPFLabel.setJustificationType( juce::Justification::centred );
+    
+    addAndMakeVisible( &outputLabel );
+    outputLabel.setText( "OUTPUT", juce::dontSendNotification );
+    outputLabel.setJustificationType( juce::Justification::centred );
     
     outputHPFSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "outHPF", outputHPFSlider));
     addAndMakeVisible( &outputHPFSlider );
@@ -82,11 +91,11 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     outputHPFSlider.setSkewFactorFromMidPoint( 1000.0f );
     outputHPFSlider.setTooltip( "Cutoff frequency for highpass filter on output of chebyshev waveshapers" );
     outputHPFLabel.attachToComponent( &outputHPFSlider, false );
-    outputHPFLabel.setText( "Out HPF", juce::dontSendNotification );
+    outputHPFLabel.setText( "HPF", juce::dontSendNotification );
     outputHPFLabel.setJustificationType( juce::Justification::centred );
     
     outputLPFSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "outLPF", outputLPFSlider));
-    addAndMakeVisible( &outputLPFSlider );
+    addAndMakeVisible( &outputLPFSlider ); 
     outputLPFSlider.setRange( 20.0f, 20000.0f );
     outputLPFSlider.setSliderStyle (juce::Slider::Rotary);
     outputLPFSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, potSize, textHeight);
@@ -95,12 +104,28 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     outputLPFSlider.setSkewFactorFromMidPoint( 1000.0f );
     outputLPFSlider.setTooltip( "Cutoff frequency for lowpass filter on output of chebyshev waveshapers" );
     outputLPFLabel.attachToComponent( &outputLPFSlider, false);
-    outputLPFLabel.setText( "Out LPF", juce::dontSendNotification );
+    outputLPFLabel.setText( "LPF", juce::dontSendNotification );
     outputLPFLabel.setJustificationType( juce::Justification::centred );
     
     
+    addAndMakeVisible( &firstOrderLPFToggle );
+    firstOrderLPFToggleAttachment.reset( new juce::AudioProcessorValueTreeState::ButtonAttachment(valueTreeState, "firstOrderLPF", firstOrderLPFToggle));
+    firstOrderLPFToggle.setTooltip("Order for low pass filters");
+    firstOrderLPFToggle.onStateChange = [ this ]
+    {
+        if ( firstOrderLPFToggle.getToggleState() )
+        {
+            firstOrderLPFToggle.setButtonText("1st order");
+        }
+        else
+        {
+            firstOrderLPFToggle.setButtonText("2nd order");
+        }
+    };
+    
     addAndMakeVisible(&tooltipsToggle);
     tooltipsToggle.setButtonText("Hints");
+    tooltipsToggle.setColour(tooltipsToggle.tickColourId, juce::Colours::white.withAlpha(1.0f));
     tooltipsToggle.onStateChange = [this]
     {
         if (tooltipsToggle.getToggleState())
@@ -115,7 +140,9 @@ Sjf_chebyShevAudioProcessorEditor::Sjf_chebyShevAudioProcessorEditor (Sjf_chebyS
     tooltipWindow.getObject().setAlpha(0.0f);
     
 //    startTimer(100);
-    setSize (600, 300);
+    auto w = potSize * 6 + textHeight * 2.5;
+    auto h = potSize * 2 + textHeight * 5.5 - 2;
+    setSize (w, h);
 }
 
 Sjf_chebyShevAudioProcessorEditor::~Sjf_chebyShevAudioProcessorEditor()
@@ -135,14 +162,16 @@ void Sjf_chebyShevAudioProcessorEditor::paint (juce::Graphics& g)
     g.drawFittedText("sjf_chebyShev", 0, 0, getWidth(), textHeight, juce::Justification::centred, 1);
     
     g.setColour( inputParamsBackgroundColour );
-    g.fillRect( inputDriveLabel.getX(), inputDriveLabel.getY(), inputDriveLabel.getWidth(), inputLPFSlider.getBottom() - inputDriveLabel.getY() );
+    g.fillRect( inputLabel.getX(), inputLabel.getY(), inputLabel.getWidth(), inputLPFSlider.getBottom() - inputLabel.getY() );
     g.setColour( outlineColour );
-    g.drawRect( inputDriveLabel.getX(), inputDriveLabel.getY(), inputDriveLabel.getWidth(), inputLPFSlider.getBottom() - inputDriveLabel.getY() );
+    g.drawRect( inputLabel.getX(), inputLabel.getY(), inputLabel.getWidth(), inputLPFSlider.getBottom() - inputLabel.getY() );
+    g.drawLine( inputLabel.getX(), inputLabel.getBottom(), inputLabel.getRight(), inputLabel.getBottom() );
     
     g.setColour( outputParamsBackgroundColour );
-    g.fillRect( outputHPFLabel.getX(), outputHPFLabel.getY(), outputHPFLabel.getWidth(), outputLPFSlider.getBottom() - outputHPFLabel.getY() );
+    g.fillRect( outputLabel.getX(), outputLabel.getY(), outputLabel.getWidth(), outputLPFSlider.getBottom() - outputLabel.getY() );
     g.setColour( outlineColour );
-    g.drawRect( outputHPFLabel.getX(), outputHPFLabel.getY(), outputHPFLabel.getWidth(), outputLPFSlider.getBottom() - outputHPFLabel.getY() );
+    g.drawRect( outputLabel.getX(), outputLabel.getY(), outputLabel.getWidth(), outputLPFSlider.getBottom() - outputLabel.getY() );
+    g.drawLine( outputLabel.getX(), outputLabel.getBottom(), outputLabel.getRight(), outputLabel.getBottom() );
     
     g.setColour( mixBackgroundColour );
     g.fillRect( mixLabel.getX(), mixLabel.getY(), mixLabel.getWidth(), mixSlider.getBottom() - mixLabel.getY() );
@@ -152,17 +181,22 @@ void Sjf_chebyShevAudioProcessorEditor::paint (juce::Graphics& g)
 
 void Sjf_chebyShevAudioProcessorEditor::resized()
 {
-    chebyMultiSlider.setBounds( textHeight * 0.5f, textHeight + textHeight*0.5f, getWidth() * 0.5, getHeight() - textHeight*2.0f );
+    chebyMultiSlider.setBounds( textHeight * 0.5f, textHeight + textHeight*0.5f, potSize * 3, getHeight() - textHeight*2.0f );
     
-    inputDriveSlider.setBounds( chebyMultiSlider.getRight() + textHeight*0.5f, chebyMultiSlider.getY() + inputDriveLabel.getHeight(), potSize, potSize );
-    inputLPFSlider.setBounds(inputDriveSlider.getX(), inputDriveSlider.getBottom() + textHeight + textHeight*0.5f, potSize, potSize );
+    inputLabel.setBounds( chebyMultiSlider.getRight() + textHeight*0.5f, chebyMultiSlider.getY(), potSize, textHeight );
+    inputDriveSlider.setBounds( inputLabel.getX(), inputLabel.getBottom() + inputDriveLabel.getHeight(), potSize, potSize );
+    inputLPFSlider.setBounds(inputDriveSlider.getX(), inputDriveSlider.getBottom() + inputDriveLabel.getHeight(), potSize, potSize );
     
-    outputHPFSlider.setBounds( inputDriveSlider.getRight() + textHeight*0.5f, inputDriveSlider.getY(), potSize, potSize );
-    outputLPFSlider.setBounds( outputHPFSlider.getX(), outputHPFSlider.getBottom() + textHeight + textHeight*0.5f, potSize, potSize );
+    outputLabel.setBounds( inputLabel.getRight() + textHeight*0.5f, inputLabel.getY(), potSize, textHeight );
+    outputHPFSlider.setBounds( outputLabel.getX(), outputLabel.getBottom() + outputHPFLabel.getHeight(), potSize, potSize );
+    outputLPFSlider.setBounds( outputHPFSlider.getX(), outputHPFSlider.getBottom() + outputHPFLabel.getHeight(), potSize, potSize );
     
-    mixSlider.setBounds( outputLPFSlider.getRight() + textHeight*0.5f, outputHPFSlider.getY(), potSize, potSize );
+    auto mixTop = outputLabel.getY() + ( outputLPFSlider.getBottom() - outputLabel.getY() )*0.5f - ( mixLabel.getHeight() + potSize ) * 0.5f;
     
-    tooltipsToggle.setBounds(getWidth() - potSize, getHeight() - textHeight, potSize, textHeight );
+    mixSlider.setBounds( outputLabel.getRight() + textHeight*0.5f, mixTop, potSize, potSize );
+    firstOrderLPFToggle.setBounds( mixSlider.getX(), mixSlider.getBottom(), potSize, textHeight );
+    
+    tooltipsToggle.setBounds(mixSlider.getX(), chebyMultiSlider.getBottom() - textHeight, potSize, textHeight );
 }
 
 //

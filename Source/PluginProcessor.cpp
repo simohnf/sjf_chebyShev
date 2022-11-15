@@ -40,6 +40,7 @@ Sjf_chebyShevAudioProcessor::Sjf_chebyShevAudioProcessor()
     inLPFParameter = parameters.getRawParameterValue( "inLPF" );
     outHPFParameter = parameters.getRawParameterValue( "outHPF" );
     outLPFParameter = parameters.getRawParameterValue( "outLPF" );
+    firstOrderLPParameter = parameters.getRawParameterValue( "firstOrderLPF" );
     
 }
 
@@ -172,12 +173,19 @@ void Sjf_chebyShevAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     float distorted, val, inVal, dryAmp, wetAmp, inLPFAlpha, outHPFAlpha, outLPFAlpha, inDrive;
 
     auto numOrders = m_cheby.getNumOrders();
+    for ( int i  = 0; i < m_inLPF.size() ; i++ )
+    {
+        m_inLPF[ i ].isFirstOrder( *firstOrderLPParameter );
+        m_outLPF[ i ].isFirstOrder( *firstOrderLPParameter );
+    }
+    
     for ( int i = 0; i < bufferSize; i++ )
     {
         inDrive = m_inputDriveSmoothed.getNextValue();
         inLPFAlpha = m_inLPFSmoothed.getNextValue();
         outHPFAlpha = m_outHPFSmoothed.getNextValue();
         outLPFAlpha = m_outLPFSmoothed.getNextValue();
+//        DBG( outLPFAlpha );
         wetAmp = m_mixSmoothed.getNextValue();
         dryAmp = 1.0f - wetAmp;
         wetAmp *= wetAmp;
@@ -201,7 +209,7 @@ void Sjf_chebyShevAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
                 m_outHPF[ c ][ i ].setCutoff( outHPFAlpha );
                 distorted -= m_outHPF[ c ][ i ].filterInput( distorted );
             }
-            m_outLPF[ c ].setCutoff( outHPFAlpha );
+            m_outLPF[ c ].setCutoff( outLPFAlpha );
             distorted = m_outLPF[ c ].filterInput( distorted );
 
             
@@ -282,10 +290,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout Sjf_chebyShevAudioProcessor:
     params.add ( std::make_unique<juce::AudioParameterFloat> ("mix", "Mix", 0.0f, 100.0f, 100.0f) );
     params.add ( std::make_unique<juce::AudioParameterFloat> ("inputDrive", "InputDrive", 0.0001f, 100.0f, 100.0f) );
     
-    params.add ( std::make_unique<juce::AudioParameterFloat> ("inLPF", "InLPF", 20.0f, 20000.0f, 1000.0f) );
-    params.add ( std::make_unique<juce::AudioParameterFloat> ("outHPF", "OutHPF", 20.0f, 20000.0f, 20.0f) );
-    params.add ( std::make_unique<juce::AudioParameterFloat> ("outLPF", "OutLPF", 20.0f, 20000.0f, 2000.0f) );
-    
+    params.add ( std::make_unique<juce::AudioParameterFloat> ("inLPF", "InLPF", 20.0f, 10000.0f, 1000.0f) );
+    params.add ( std::make_unique<juce::AudioParameterFloat> ("outHPF", "OutHPF", 20.0f, 10000.0f, 20.0f) );
+    params.add ( std::make_unique<juce::AudioParameterFloat> ("outLPF", "OutLPF", 20.0f, 10000.0f, 1000.0f) );
+    params.add ( std::make_unique<juce::AudioParameterBool> ("firstOrderLPF", "FirstOrderLPF", false ) );
     for ( int i = 0; i < m_cheby.getNumOrders(); i++ )
     {
         std::string name = "cheby" + std::to_string( i + 2 ) ;
@@ -300,6 +308,8 @@ float Sjf_chebyShevAudioProcessor::calculateFilterAlpha( float cutOffFrequency )
 {
     return sin( cutOffFrequency * 2 * 3.14159265359 / m_SR );
 }
+
+
 
 //==============================================================================
 // This creates new instances of the plugin..
